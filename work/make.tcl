@@ -10,16 +10,21 @@
  #############################
  # source file
  #############################
- import_files -norecurse /home/ldp/graduate/MMM/src/mmm_nlp_90b.v
+ import_files -norecurse ../src/mmm_nlp_90b.v
  update_compile_order -fileset sources_1
  set_property SOURCE_SET sources_1 [get_filesets sim_1]
  #############################
  # simulation file
  #############################
- import_files -fileset sim_1 -norecurse /home/ldp/graduate/MMM/src/mmm_nlp_90b_tb.v
+ import_files -fileset sim_1 -norecurse ../src/mmm_nlp_90b_tb.v
  update_compile_order -fileset sim_1
  update_compile_order -fileset sim_1
  #############################
  # launch simulation
  #############################
  launch_simulation
+ #############################
+ # open gui
+ #############################
+ vivado &
+ open_project ./work/mmm_nlp_90b.xpr

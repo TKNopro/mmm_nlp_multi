@@ -27,14 +27,14 @@ module mmm_nlp_90b_tb;
     end
 
     //generate the reset signal
-    initial begin
+    /*initial begin
         rstn    =   1;
         #15;
         rstn    =   0;
         #20;
         rstn    =   1;
     end
-
+    */
     //generate the middle signals
     reg     [31:0]          a0;
     reg     [31:0]          a1;
@@ -90,8 +90,15 @@ module mmm_nlp_90b_tb;
     integer sim_times=0;
     initial begin
         $display("######Start to simulate######");
+	$display("######Start to reset the design######");
         //$dumpfile("mmm_nlp_90b.vcd");
         //$dumpvars(0, mmm_nlp_90b);
+        rstn    =   1;
+        #15;
+        rstn    =   0;
+        #20;
+        rstn    =   1;
+	$display("######Finished reset the design#######");
         #(CYC*100)
 
         while (1) begin
@@ -103,7 +110,8 @@ module mmm_nlp_90b_tb;
                 $display("a=0x%x b=0x%x c=0x%x",a,b,res);
                 $stop;
             end else begin
-                // $display("%5d:0x%x == 0x%x",sim_times,sim_ret,d_out);
+                $display("%5d:0x%x == 0x%x",sim_times,sim_ret,res);
+		$display("###### a=0x%x b=0x%x c=0x%x",a,b,res);
                 $write(".");
             end
             if (sim_times==10000) begin

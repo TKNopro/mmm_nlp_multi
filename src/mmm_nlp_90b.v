@@ -181,13 +181,23 @@ module mmm_nlp_90b#(
     end
 
     //extends the carry
-    always @(*) begin
-        x2y2_a_x0y5_c_a     =  {{(ODW-1){1'b0}},x2y2_a_x0y5_c}   <<   120;
-        x3y2_a_x1y5_c_a     =  {{(ODW-1){1'b0}},x3y2_a_x1y5_c}   <<   144;
-        x2y1_a_x0y4_c_a     =  {{(ODW-1){1'b0}},x2y1_a_x0y4_c}   <<   104;
-        x1y3_a_x3y0_c_a     =  {{(ODW-1){1'b0}},x1y3_a_x3y0_c}   <<   112;
-        x3y1_a_x1y4_c_a     =  {{(ODW-1){1'b0}},x3y1_a_x1y4_c}   <<   128;
-        x2y0_a_x0y3_c_a     =  {{(ODW-1){1'b0}},x2y0_a_x0y3_c}   <<   88;
+    always @(posedge i_clk or negedge i_rstn) begin
+	if(!i_rstn) begin
+	    x2y2_a_x0y5_c_a	<=	{ODW{1'b0}};
+	    x3y2_a_x1y5_c_a	<=	{ODW{1'b0}};
+	    x2y1_a_x0y4_c_a	<=	{ODW{1'b0}};
+	    x1y3_a_x3y0_c_a	<=	{ODW{1'b0}};
+	    x3y1_a_x1y4_c_a	<=	{ODW{1'b0}};
+ 	    x2y0_a_x0y3_c_a	<=	{ODW{1'b0}};
+	end	
+	else begin
+            x2y2_a_x0y5_c_a     <=  	{{(ODW-1){1'b0}},x2y2_a_x0y5_c}   <<   120;
+            x3y2_a_x1y5_c_a     <=  	{{(ODW-1){1'b0}},x3y2_a_x1y5_c}   <<   144;
+            x2y1_a_x0y4_c_a     <=  	{{(ODW-1){1'b0}},x2y1_a_x0y4_c}   <<   104;
+            x1y3_a_x3y0_c_a     <=  	{{(ODW-1){1'b0}},x1y3_a_x3y0_c}   <<   112;
+            x3y1_a_x1y4_c_a     <=  	{{(ODW-1){1'b0}},x3y1_a_x1y4_c}   <<   128;
+            x2y0_a_x0y3_c_a     <=  	{{(ODW-1){1'b0}},x2y0_a_x0y3_c}   <<   88;
+	end
     end
 
     //the conb of the multi result
