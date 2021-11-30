@@ -4,7 +4,7 @@
 
 module mmm_nlp_90b_tb;
     //defination of paramete 
-    parameter       ODW         =       180;
+    parameter       ODW         =       181;
     parameter       IDW         =       90;
     parameter       OAW         =       24;
     parameter       OBW         =       16;
@@ -67,7 +67,7 @@ module mmm_nlp_90b_tb;
     end
 
     //generate the sim result
-    reg  [180:0]    sim_ret;
+    reg  [ODW-1:0]    sim_ret;
     always @(*) begin
         sim_ret =   a * b;
     end

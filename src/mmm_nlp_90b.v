@@ -91,8 +91,8 @@ module mmm_nlp_90b#(
     reg     [ODW-1:0]           shift_r_152b;
     reg     [ODW-1:0]           shift_r_128b;
     //part of result
-    reg     [LSW-1:0]           DSL;
-    reg     [HSW-1:0]           DSH;
+    //reg     [LSW-1:0]           DSL;
+    //reg     [HSW-1:0]           DSH;
 
 
     assign  {x3,x2,x1,x0}       =   {6'b0,i_a};
@@ -182,12 +182,12 @@ module mmm_nlp_90b#(
 
     //extends the carry
     always @(*) begin
-        x2y2_a_x0y5_c_a     =  x2y2_a_x0y5_c   <<   80;
-        x3y2_a_x1y5_c_a     =  x3y2_a_x1y5_c   <<   104;
-        x2y1_a_x0y4_c_a     =  x2y1_a_x0y4_c   <<   64;
-        x1y3_a_x3y0_c_a     =  x1y3_a_x3y0_c   <<   72;
-        x3y1_a_x1y4_c_a     =  x3y1_a_x1y4_c   <<   88;
-        x2y0_a_x0y3_c_a     =  x2y0_a_x0y3_c   <<   48;
+        x2y2_a_x0y5_c_a     =  {{(ODW-1){1'b0}},x2y2_a_x0y5_c}   <<   120;
+        x3y2_a_x1y5_c_a     =  {{(ODW-1){1'b0}},x3y2_a_x1y5_c}   <<   144;
+        x2y1_a_x0y4_c_a     =  {{(ODW-1){1'b0}},x2y1_a_x0y4_c}   <<   104;
+        x1y3_a_x3y0_c_a     =  {{(ODW-1){1'b0}},x1y3_a_x3y0_c}   <<   112;
+        x3y1_a_x1y4_c_a     =  {{(ODW-1){1'b0}},x3y1_a_x1y4_c}   <<   128;
+        x2y0_a_x0y3_c_a     =  {{(ODW-1){1'b0}},x2y0_a_x0y3_c}   <<   88;
     end
 
     //the conb of the multi result
@@ -200,11 +200,11 @@ module mmm_nlp_90b#(
             shift_r_128b    <=  {ODW{1'b0}};
         end
         else begin
-            shift_r_136b    <=  {x3y4,x2y3,x1y2,x0y1} << 16;
-            shift_r_120b    <=  {x3y3,x2y2_a_x0y5,x1y1,x0y0};
-            shift_r_104b    <=  {x3y2_a_x1y5,x2y1_a_x0y4,x1y0} << 24;
-            shift_r_152b    <=  {x3y5,x2y4,x1y3_a_x3y0,x0y2} << 32;
-            shift_r_128b    <=  {x2y5,x3y1_a_x1y4,x2y0_a_x0y3} << 48;
+            shift_r_136b    <=  /*{x3y4,x2y3,x1y2,x0y1} << 16;*/{{(ODW-(4*40)){1'b0}},{x3y4,x2y3,x1y2,x0y1}} << 16;
+            shift_r_120b    <=  /*{x3y3,x2y2_a_x0y5,x1y1,x0y0};*/{{(ODW-(4*40)){1'b0}},{x3y3,x2y2_a_x0y5,x1y1,x0y0}};
+            shift_r_104b    <=  /*{x3y2_a_x1y5,x2y1_a_x0y4,x1y0} << 24;*/{{(ODW-(3*40)){1'b0}},{x3y2_a_x1y5,x2y1_a_x0y4,x1y0}} << 24;
+            shift_r_152b    <=  /*{x3y5,x2y4,x1y3_a_x3y0,x0y2} << 32;*/{{(ODW-(4*40)){1'b0}},{x3y5,x2y4,x1y3_a_x3y0,x0y2}} << 32;
+            shift_r_128b    <=  /*{x2y5,x3y1_a_x1y4,x2y0_a_x0y3} << 48;*/{{(ODW-(3*40)){1'b0}},{x2y5,x3y1_a_x1y4,x2y0_a_x0y3}} << 48;
         end
     end
 
