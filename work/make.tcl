@@ -16,7 +16,7 @@
  #############################
  # simulation file
  #############################
- import_files -fileset sim_1 -norecurse ../src/mmm_nlp_90b_tb.v
+ import_files -fileset sim_1 -norecurse ../tb/mmm_nlp_90b_tb.v
  update_compile_order -fileset sim_1
  update_compile_order -fileset sim_1
  #############################
@@ -26,5 +26,5 @@
  #############################
  # open gui
  #############################
- vivado &
+ start_gui
  open_project ./work/mmm_nlp_90b.xpr

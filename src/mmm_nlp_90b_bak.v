@@ -35,7 +35,6 @@ module mmm_nlp_90b#(
     wire    [OBW-1:0]           y5;
     //output result
     reg     [ODW-1:0]           res;
-
     //mid result
     reg     [RESW-1:0]          x0y0;
     reg     [RESW-1:0]          x0y1;
@@ -64,13 +63,27 @@ module mmm_nlp_90b#(
     reg     [RESW-1:0]          x3y3;
     reg     [RESW-1:0]          x3y4;
     reg     [RESW-1:0]          x3y5;
+    //partitial add
+    reg     [RESW-1:0]          x2y2_a_x0y5;
+    reg     [RESW-1:0]          x3y2_a_x1y5;
+    reg     [RESW-1:0]          x2y1_a_x0y4;
+    reg     [RESW-1:0]          x1y3_a_x3y0;
+    reg     [RESW-1:0]          x3y1_a_x1y4;
+    reg     [RESW-1:0]          x2y0_a_x0y3;
 
-    //make multi bits as the unit
-    reg     [ODW-1:0]           shift_r_a_80;
-    reg     [ODW-1:0]           shift_r_b_64;
-    reg     [ODW-1:0]           shift_r_c_72;
-    reg     [ODW-1:0]           shift_r_d_48;
+    reg                         x2y2_a_x0y5_c;
+    reg                         x3y2_a_x1y5_c;
+    reg                         x2y1_a_x0y4_c;
+    reg                         x1y3_a_x3y0_c;
+    reg                         x3y1_a_x1y4_c;
+    reg                         x2y0_a_x0y3_c;
 
+    reg     [ODW-1:0]           x2y2_a_x0y5_c_a;
+    reg     [ODW-1:0]           x3y2_a_x1y5_c_a;
+    reg     [ODW-1:0]           x2y1_a_x0y4_c_a;
+    reg     [ODW-1:0]           x1y3_a_x3y0_c_a;
+    reg     [ODW-1:0]           x3y1_a_x1y4_c_a;
+    reg     [ODW-1:0]           x2y0_a_x0y3_c_a;
     //make multi bits as the unit
     reg     [ODW-1:0]           shift_r_136b;
     reg     [ODW-1:0]           shift_r_120b;
@@ -78,8 +91,8 @@ module mmm_nlp_90b#(
     reg     [ODW-1:0]           shift_r_152b;
     reg     [ODW-1:0]           shift_r_128b;
     //part of result
-    reg     [LSW-1:0]           DSL;
-    reg     [HSW-1:0]           DSH;
+    //reg     [LSW-1:0]           DSL;
+    //reg     [HSW-1:0]           DSH;
 
 
     assign  {x3,x2,x1,x0}       =   {6'b0,i_a};
@@ -147,6 +160,46 @@ module mmm_nlp_90b#(
         end
     end
 
+    //pipeline 2
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            {x2y2_a_x0y5_c, x2y2_a_x0y5}    <=  {ORSW{1'b0}};   //80
+            {x3y2_a_x1y5_c, x3y2_a_x1y5}    <=  {ORSW{1'b0}};   //104
+            {x2y1_a_x0y4_c, x2y1_a_x0y4}    <=  {ORSW{1'b0}};   //64
+            {x1y3_a_x3y0_c, x1y3_a_x3y0}    <=  {ORSW{1'b0}};   //72
+            {x3y1_a_x1y4_c, x3y1_a_x1y4}    <=  {ORSW{1'b0}};   //88
+            {x2y0_a_x0y3_c, x2y0_a_x0y3}    <=  {ORSW{1'b0}};   //48
+        end
+        else begin
+            {x2y2_a_x0y5_c, x2y2_a_x0y5}    <=  x2y2 + x0y5;
+            {x3y2_a_x1y5_c, x3y2_a_x1y5}    <=  x3y2 + x1y5;
+            {x2y1_a_x0y4_c, x2y1_a_x0y4}    <=  x2y1 + x0y4;
+            {x1y3_a_x3y0_c, x1y3_a_x3y0}    <=  x1y3 + x3y0;
+            {x3y1_a_x1y4_c, x3y1_a_x1y4}    <=  x3y1 + x1y4;
+            {x2y0_a_x0y3_c, x2y0_a_x0y3}    <=  x2y0 + x0y3;
+        end
+    end
+
+    //extends the carry
+    always @(posedge i_clk or negedge i_rstn) begin
+	if(!i_rstn) begin
+	    x2y2_a_x0y5_c_a	<=	{ODW{1'b0}};
+	    x3y2_a_x1y5_c_a	<=	{ODW{1'b0}};
+	    x2y1_a_x0y4_c_a	<=	{ODW{1'b0}};
+	    x1y3_a_x3y0_c_a	<=	{ODW{1'b0}};
+	    x3y1_a_x1y4_c_a	<=	{ODW{1'b0}};
+ 	    x2y0_a_x0y3_c_a	<=	{ODW{1'b0}};
+	end	
+	else begin
+            x2y2_a_x0y5_c_a     <=  	{{(ODW-1){1'b0}},x2y2_a_x0y5_c}   <<   120;
+            x3y2_a_x1y5_c_a     <=  	{{(ODW-1){1'b0}},x3y2_a_x1y5_c}   <<   144;
+            x2y1_a_x0y4_c_a     <=  	{{(ODW-1){1'b0}},x2y1_a_x0y4_c}   <<   104;
+            x1y3_a_x3y0_c_a     <=  	{{(ODW-1){1'b0}},x1y3_a_x3y0_c}   <<   112;
+            x3y1_a_x1y4_c_a     <=  	{{(ODW-1){1'b0}},x3y1_a_x1y4_c}   <<   128;
+            x2y0_a_x0y3_c_a     <=  	{{(ODW-1){1'b0}},x2y0_a_x0y3_c}   <<   88;
+	end
+    end
+
     //the conb of the multi result
     always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn) begin
@@ -155,21 +208,13 @@ module mmm_nlp_90b#(
             shift_r_104b    <=  {ODW{1'b0}};
             shift_r_152b    <=  {ODW{1'b0}};
             shift_r_128b    <=  {ODW{1'b0}};
-            shift_r_a_80    <=  {ODW{1'b0}};
-            shift_r_b_64    <=  {ODW{1'b0}};
-            shift_r_c_72    <=  {ODW{1'b0}};
-            shift_r_d_48    <=  {ODW{1'b0}};
         end
         else begin
-            shift_r_136b    <=  {x3y4,x2y3,x1y2,x0y1} << 16;
-            shift_r_120b    <=  {x3y3,x2y2,x1y1,x0y0};
-            shift_r_104b    <=  {x3y2,x2y1,x1y0} << 24;
-            shift_r_152b    <=  {x3y5,x2y4,x1y3,x0y2} << 32;
-            shift_r_128b    <=  {x2y5,x1y4,x0y3} << 48;
-            shift_r_a_80    <=  {x0y5} << 80;
-            shift_r_b_64    <=  {x1y5,x0y4} << 64;
-            shift_r_c_72    <=  {x3y0} << 72;
-            shift_r_d_48    <=  {x3y1,x2y0} << 48;
+            shift_r_136b    <=  /*{x3y4,x2y3,x1y2,x0y1} << 16;*/{{(ODW-(4*40)){1'b0}},{x3y4,x2y3,x1y2,x0y1}} << 16;
+            shift_r_120b    <=  /*{x3y3,x2y2_a_x0y5,x1y1,x0y0};*/{{(ODW-(4*40)){1'b0}},{x3y3,x2y2_a_x0y5,x1y1,x0y0}};
+            shift_r_104b    <=  /*{x3y2_a_x1y5,x2y1_a_x0y4,x1y0} << 24;*/{{(ODW-(3*40)){1'b0}},{x3y2_a_x1y5,x2y1_a_x0y4,x1y0}} << 24;
+            shift_r_152b    <=  /*{x3y5,x2y4,x1y3_a_x3y0,x0y2} << 32;*/{{(ODW-(4*40)){1'b0}},{x3y5,x2y4,x1y3_a_x3y0,x0y2}} << 32;
+            shift_r_128b    <=  /*{x2y5,x3y1_a_x1y4,x2y0_a_x0y3} << 48;*/{{(ODW-(3*40)){1'b0}},{x2y5,x3y1_a_x1y4,x2y0_a_x0y3}} << 48;
         end
     end
 
@@ -177,7 +222,7 @@ module mmm_nlp_90b#(
         if(!i_rstn)
             res     <=  {ODW{1'b0}};
         else
-            res     <=  shift_r_152b + shift_r_136b + shift_r_128b + shift_r_120b + shift_r_104b + shift_r_a_80 + shift_r_b_64 + shift_r_c_72 + shift_r_d_48;
+            res     <=  shift_r_152b + shift_r_136b + shift_r_128b + shift_r_120b + shift_r_104b + x2y2_a_x0y5_c_a + x2y2_a_x0y5_c_a + x2y1_a_x0y4_c_a + x1y3_a_x3y0_c_a + x3y1_a_x1y4_c_a + x2y0_a_x0y3_c_a;
     end
 
     assign  o_res   =   res;

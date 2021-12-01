@@ -1,7 +1,10 @@
-.PHONY:	src clean build
+.PHONY:	src clean build backup
 
 clean:
 	rm -rf work *.log *.jou *.str
 
 build:
 	vivado -nojournal -nolog -mode batch -source make.tcl
+
+backup:
+	mv -rf work ./work_bak
