@@ -15,11 +15,12 @@ module mmm_nlp_90b_tb;
     reg                     rstn;
     reg     [IDW-1:0]       a;
     reg     [IDW-1:0]       b;
+    reg 		    carry;
     //simulation register
     reg     [ODW-1:0]       sim_ret;
     reg     [ODW-1:0]       sim_ret_1;
-    reg     [ODW-1:0]       sim_ret_2;
-
+    reg     [ODW-1:0]       sim_ret_2; 
+    reg  		    carry_r1;
     wire    [ODW-1:0]       res;
 
     //generate the system clock
@@ -35,10 +36,12 @@ module mmm_nlp_90b_tb;
         if(!rstn) begin
             a   <=  {(IDW){1'b0}};
             b   <=  {(IDW){1'b0}};
+	    carry	<=	1'b0;
         end
         else begin
             a   <=  {{{$random}%67108863},{$random},{$random},{$random}};
             b   <=  {{{$random}%67108863},{$random},{$random},{$random}};
+	    carry	<=	{$random} % 2;
         end
     end
 
@@ -49,7 +52,7 @@ module mmm_nlp_90b_tb;
             sim_ret     <=  {(ODW){1'b0}};
         end 
         else begin
-            sim_ret_1   <=  a * b;
+            sim_ret_1   <=  a * b + carry;
             sim_ret_2   <=  sim_ret_1;
             sim_ret     <=  sim_ret_2;
         end
@@ -65,6 +68,7 @@ module mmm_nlp_90b_tb;
         .i_rstn     (rstn),
         .i_a        (a),
         .i_b        (b),
+	.i_carry    (carry),
 
         .o_res      (res)
     );

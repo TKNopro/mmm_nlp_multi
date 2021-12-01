@@ -12,8 +12,8 @@ module mmm_nlp_90b#(
     //input signals
     input   [IDW-1:0]           i_a,
     input   [IDW-1:0]           i_b,
-    input			i_carry,
-
+    input                       i_carry,
+    
     output  [ODW-1:0]           o_res
 );
     //parameter defination 
@@ -34,9 +34,11 @@ module mmm_nlp_90b#(
     wire    [OBW-1:0]           y3;
     wire    [OBW-1:0]           y4;
     wire    [OBW-1:0]           y5;
-    //register of the carry in
-    reg  		 	carry_r1;
+    //the register of the carry in
+    reg  			carry_r1;
     reg  			carry_r2;
+    reg 			carry_r3;
+    reg  			carry_r4;
     //output result
     reg     [ODW-1:0]           res;
 
@@ -81,23 +83,23 @@ module mmm_nlp_90b#(
     reg     [ODW-1:0]           shift_r_104b;
     reg     [ODW-1:0]           shift_r_152b;
     reg     [ODW-1:0]           shift_r_128b;
-    //part of result
-    reg     [LSW-1:0]           DSL;
-    reg     [HSW-1:0]           DSH;
 
 
     assign  {x3,x2,x1,x0}       =   {6'b0,i_a};
     assign  {y5,y4,y3,y2,y1,y0} =   {6'b0,i_b};
-
-    //the register of the carry in
-    always @(posedge i_clk or negedge i_rstn) begin	
+    //register the carry in
+    always @(posedge i_clk or negedge i_rstn) begin
 	if(!i_rstn) begin
-            carry_r1	<=	1'b0;
-	    carry_r2	<=	1'b0;
+	    carry_r1	<=	1'b0;
+   	    carry_r2	<=	1'b0;
+	    carry_r3	<=	1'b0;
+	    carry_r4	<=	1'b0;
 	end
 	else begin
- 	    carry_r1	<=	i_carry;
+	    carry_r1	<=	i_carry;
 	    carry_r2	<=	carry_r1;
+	    carry_r3	<=	carry_r2;
+	    carry_r4	<=	carry_r3;
 	end
     end
 
@@ -189,11 +191,53 @@ module mmm_nlp_90b#(
         end
     end
 
+    //add pipeline register (pipeline1)
+    reg     [ODW-1:0]           add_line1;
+    reg     [ODW-1:0]           add_line2;
+    reg     [ODW-1:0]           add_line3;
+    reg     [ODW-1:0]           add_line4;
+    reg     [ODW-1:0]           add_line5;
+
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            add_line1   <=  {(ODW){1'b0}};
+            add_line2   <=  {(ODW){1'b0}};
+            add_line3   <=  {(ODW){1'b0}};
+            add_line4   <=  {(ODW){1'b0}};
+            add_line5   <=  {(ODW){1'b0}};
+        end
+        else begin
+            add_line1   <=  shift_r_120b + shift_r_a_80;
+            add_line2   <=  shift_r_104b + shift_r_b_64;
+            add_line3   <=  shift_r_152b + shift_r_c_72;
+            add_line4   <=  shift_r_128b + shift_r_d_48;
+            add_line5   <=  shift_r_136b;
+        end
+    end
+
+    //add pipeline register (pipeline2)
+    reg     [ODW-1:0]           add_line6;
+    reg     [ODW-1:0]           add_line7;
+    reg     [ODW-1:0]           add_line8;
+
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            add_line6   <=  {(ODW){1'b0}};
+            add_line7   <=  {(ODW){1'b0}};
+            add_line8   <=  {(ODW){1'b0}};
+        end
+        else begin
+            add_line6   <=  add_line1 + add_line2;
+            add_line7   <=  add_line3 + add_line4;
+            add_line8   <=  add_line5;
+        end
+    end
+
     always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn)
             res     <=  {ODW{1'b0}};
         else
-            res     <=  shift_r_152b + shift_r_136b + shift_r_128b + shift_r_120b + shift_r_104b + shift_r_a_80 + shift_r_b_64 + shift_r_c_72 + shift_r_d_48 + carry_r2;
+            res     <=  add_line6 + add_line7 + add_line8 + carry_r4;
     end
 
     assign  o_res   =   res;
