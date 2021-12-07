@@ -10,14 +10,14 @@
  #############################
  # source file
  #############################
- import_files -norecurse ../src/mmm_nlp_256b_3way.v
+ #import_files -norecurse ../src/mmm_nlp_256b_3way.v
  import_files -norecurse ../src/mmm_nlp_90b.v
  update_compile_order -fileset sources_1
  set_property SOURCE_SET sources_1 [get_filesets sim_1]
  #############################
  # simulation file
  #############################
- import_files -fileset sim_1 -norecurse ../tb/mmm_nlp_256b_3way_tb.v
+ import_files -fileset sim_1 -norecurse ../tb/mmm_nlp_90b_tb.v
  update_compile_order -fileset sim_1
  update_compile_order -fileset sim_1
  #############################

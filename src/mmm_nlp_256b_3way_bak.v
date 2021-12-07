@@ -253,6 +253,18 @@ module mmm_nlp_256b_3way#(
     */
     //The reseult of the algrothim in stage 1
     //assign  T = line1 + line2 + line3 + line4 + line5;
+
+    reg     [DIVW-1:0]      P0H;
+    reg     [DIVW-1:0]      P0L;
+    reg     [2*DIVW-1:0]    P0;
+    reg     [DIVW-1:0]      P1H;
+    reg     [DIVW-1:0]      P1L;
+    reg     [2*DIVW-1:0]    P1;
+    reg     [DIVW-1:0]      P2H;
+    reg     [DIVW-1:0]      P2L;
+    reg     [2*DIVW-1:0]    P2;
+    reg     [2*DIVW-1:0]    PP02;
+    
     //register the p MSB and LSB
     always @(*) begin
         {p0h,p0l}   =   a0b0[173:0];
@@ -305,194 +317,46 @@ module mmm_nlp_256b_3way#(
 
     assign  T = TP5 + TP4 + TP3 + TP2 + TP1 + TP0;
     //the output of the stage 1 in algorithm2
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn) begin
-            {t5,t4,t3,t2,t1,t0} <=  {(5*DIVW){1'b0}};
-            {u2,u1,u0}          <=  {(3*DIVW){1'b0}};
-            u                   <=  {(3*DIVW){1'b0}};
-        end
-        else begin
-            {t5,t4,t3,t2,t1,t0} <=  T;
-            {u2,u1,u0}          <=  {t2,t1,t0};
-            u                   <=  {u2,u1,u0};
-        end
+    always @(*) begin
+        {t5,t4,t3,t2,t1,t0} =   T;
+        {u2,u1,u0}          =   {t2,t1,t0};
+        u                   =   {u2,u1,u0};
     end
     
-    //assign  o_res   =   T;
+    assign  o_res   =   T;
+
+    //register the first stage output
+    /*
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            P0H     <=  {(DIVW-1){1'b0}};
+            P0L     <=  {(DIVW-1){1'b0}};
+            P0      <=  {(2*DIVW-1){1'b0}};
+            P1H     <=  {(DIVW-1){1'b0}};
+            P1L     <=  {(DIVW-1){1'b0}};
+            P1      <=  {(2*DIVW-1){1'b0}};
+            P2H     <=  {(DIVW-1){1'b0}};
+            P2L     <=  {(DIVW-1){1'b0}};
+            P2      <=  {(2*DIVW-1){1'b0}};
+        end
+        else begin
+            P0H     <=  p0h;
+            P0L     <=  p0l;
+            P0      <=  p0;
+            P1H     <=  p1h;
+            P1L     <=  p1l;
+            P1      <=  p1;
+            P2H     <=  p2h;
+            P2L     <=  p2l;
+            P2      <=  p2;
+        end
+    end
+    */
     
+
     ////////////////////////////////////////////////
     //The second step of the MMM multiplication
     ////////////////////////////////////////////////
-    //the signal of the stage 2
-    reg [MIW-1:0]           u0_;
-    reg [MIW-1:0]           m0_;
-    reg [MIW-1:0]           u1_;
-    reg [MIW-1:0]           m1_;
-    reg [MIW-1:0]           u2_;
-    reg [MIW-1:0]           m2_;
 
-    wire[MRW-1:0]           u0m0;
-    wire[MRW-1:0]           u1m1;
-    wire[MRW-1:0]           u2m0;
-    wire[MRW-1:0]           u0m2;
-    wire[MRW-1:0]           u0u1_m_m0m1;
-
-    reg [MIW-1:0]           u0_a_u1;
-    reg [MIW-1:0]           m0_a_m1;   
-    //reg and wire (maybe not used)
-    reg [DIVW-1:0]          P2H;
-    reg [DIVW-1:0]          P2L;
-    reg [2*DIVW-1:0]        P2;
-
-    reg [ODW-1:0]           QT0;
-    reg [ODW-1:0]           QT1;
-    reg [ODW-1:0]           QT2;
-    reg [ODW-1:0]           QT;
-    //the stage 2 of the second stage of the algorithm
-    reg [DIVW-1:0]          P0H;
-    reg [DIVW-1:0]          P0L;
-    reg [2*DIVW-1:0]        P0;
-    reg [DIVW-1:0]          P1H;
-    reg [DIVW-1:0]          P1L;
-    reg [2*DIVW-1:0]        P1;
-    reg [2*DIVW-1:0]        PP02;
-    reg [DIVW-1:0]          P01H;
-    reg [DIVW-1:0]          P01L;
-    reg [DIVW-1:0]          PP20H;
-    reg [DIVW-1:0]          PP20L;
-
-    reg [3*DIVW-1:0]        Q;
-
-    always @(*) begin
-        u0_     =   {3'b0,u0};
-        m0_     =   {3'b0,/**i_m[87:0]**/};
-        u1_     =   {3'b0,u1};
-        m1_     =   {3'b0,/**i_m[87:0]**/};
-        u2_     =   {3'b0,u2};
-        m2_     =   {3'b0,/**i_m[87:0]**/};
-    end
-
-    always @(*) begin
-        u0_a_u1 =   u0 + u1;
-        m0_a_m1 =   m0 + m1;
-    end
-
-    //The multiplexer of the algorithm in stage 2
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_7 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (u0_),
-        .i_b        (m0_),
-        .i_carry    (0),
-
-        .o_res      (u0m0)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_8 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (u1_),
-        .i_b        (m1_),
-        .i_carry    (0),
-
-        .o_res      (u1m1)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_9 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (u2_),
-        .i_b        (m2_),
-        .i_carry    (0),
-
-        .o_res      (u2m2)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_10 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (u0_a_u1),
-        .i_b        (m0_a_m1),
-        .i_carry    (0),
-
-        .o_res      (u0u1_m_m0m1)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_11 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (u2_),
-        .i_b        (m0_),
-        .i_carry    (0),
-
-        .o_res      (u2m0)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_12 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (u0_),
-        .i_b        (m2_),
-        .i_carry    (0),
-
-        .o_res      (u0m2)
-    );
-
-    always @(*) begin
-        {P0H,P0L}       =   u0m0[173:0];
-        {P1H,P1L}       =   u1m1[173:0];
-        PP02            =   u2m2[173:0];
-        {P01H,P01L}     =   u0u1_m_m0m1 - P0 - P1 + P0H;
-        {PP20H,PP20L}   =   u2m0 + PP02 + P1 + P01H;
-    end   
-
-    always @(*) begin
-        P0              =   {P0H,P0L};
-        P1              =   {P1H,P1L};
-    end  
-
-    always @(*) begin
-        QT0             =   u0m0;
-        QT1             =   (u0u1_m_m0m1 - u0m0 - u1m1) << 87;
-        QT2             =   (u0m2 + u2m0 + u1m1) << 174;
-    end 
-
-    assign  QT = QT2 + QT1 + QT0;   
-
-    always @(*) begin   
-        Q               =   {PP20L,P01L,P0L};
-    end 
-
-    assign  o_res       =   QT;
 
 endmodule

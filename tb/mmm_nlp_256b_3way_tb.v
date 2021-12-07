@@ -19,6 +19,7 @@ module mmm_nlp_90b_tb;
     reg     [ODW-1:0]       sim_ret_1;
     reg     [ODW-1:0]       sim_ret_2;
     reg     [ODW-1:0]       sim_ret_3;
+    reg     [ODW-1:0]       sim_ret_4;
 
     wire    [ODW-1:0]       res;
 
@@ -47,12 +48,14 @@ module mmm_nlp_90b_tb;
             sim_ret_1   <=  {(ODW){1'b0}};
             sim_ret_2   <=  {(ODW){1'b0}};
             sim_ret_3   <=  {(ODW){1'b0}};
+            sim_ret_4   <=  {(ODW){1'b0}};
             sim_ret     <=  {(ODW){1'b0}};
         end 
         else begin
             sim_ret_1   <=  a * b;
             sim_ret_2   <=  sim_ret_1;
             sim_ret_3   <=  sim_ret_2;
+            sim_ret_4   <=  sim_ret_3;
             sim_ret     <=  sim_ret_3;
         end
     end
@@ -118,3 +121,43 @@ module mmm_nlp_90b_tb;
         $finish;
     end
 endmodule
+
+/*
+always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            P2H     <=  {ODW{1'b0}};
+            P2L     <=  {ODW{1'b0}};
+            P12L    <=  {ODW{1'b0}};
+            P02L    <=  {ODW{1'b0}};
+            P01L    <=  {ODW{1'b0}};
+            P0L     <=  {ODW{1'b0}};
+        end
+        else begin
+            P2H     <=  p2h <<  (5*DIVW);
+            P2L     <=  (p2l + p12h) << (4*DIVW);       
+            P12L    <=  (p12l + p02h) << (3*DIVW);
+            P02L    <=  p02l << (2*DIVW);
+            P01L    <=  p01l << (DIVW);
+            P0L     <=  p0l;
+        end
+    end
+
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            {p0h,p0l}   <=  {(2*DIVW){1'b0}};
+            {p1h,p1l}   <=  {(2*DIVW){1'b0}};
+            {p2h,p2l}   <=  {(2*DIVW){1'b0}};
+            {p01h,p01l} <=  {(2*DIVW+1){1'b0}};
+            {p02h,p02l} <=  {(2*DIVW+1){1'b0}};
+            {p12h,p12l} <=  {(2*DIVW+1){1'b0}};
+        end
+        else begin
+            {p0h,p0l}   <=  a0b0[173:0];
+            {p1h,p1l}   <=  a1b1[173:0];
+            {p2h,p2l}   <=  a2b2[173:0];
+            {p01h,p01l} <=  a0a1_m_b0b1 - p0 - p1 + p0h;
+            {p02h,p02l} <=  a0a2_m_b0b2 + p1 - p0 - p2 + p01h;
+            {p12h,p12l} <=  a1a2_m_b1b2 - p1 - p2;
+        end
+    end
+*/

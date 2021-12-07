@@ -13,8 +13,8 @@ module mmm_nlp_90b#(
     input   [IDW-1:0]           i_a,
     input   [IDW-1:0]           i_b,
     input                       i_carry,
-    
-    output  [ODW-1:0]           o_res
+
+    output  reg [ODW-1:0]       o_res
 );
     //parameter defination 
     localparam      RESW        =       OAW + OBW;
@@ -34,14 +34,6 @@ module mmm_nlp_90b#(
     wire    [OBW-1:0]           y3;
     wire    [OBW-1:0]           y4;
     wire    [OBW-1:0]           y5;
-    //the register of the carry in
-    reg  			carry_r1;
-    reg  			carry_r2;
-    reg 			carry_r3;
-    reg  			carry_r4;
-    //output result
-    reg     [ODW-1:0]           res;
-
     //mid result
     reg     [RESW-1:0]          x0y0;
     reg     [RESW-1:0]          x0y1;
@@ -71,37 +63,9 @@ module mmm_nlp_90b#(
     reg     [RESW-1:0]          x3y4;
     reg     [RESW-1:0]          x3y5;
 
-    //make multi bits as the unit
-    reg     [ODW-1:0]           shift_r_a_80;
-    reg     [ODW-1:0]           shift_r_b_64;
-    reg     [ODW-1:0]           shift_r_c_72;
-    reg     [ODW-1:0]           shift_r_d_48;
-
-    //make multi bits as the unit
-    reg     [ODW-1:0]           shift_r_136b;
-    reg     [ODW-1:0]           shift_r_120b;
-    reg     [ODW-1:0]           shift_r_104b;
-    reg     [ODW-1:0]           shift_r_152b;
-    reg     [ODW-1:0]           shift_r_128b;
-
 
     assign  {x3,x2,x1,x0}       =   {6'b0,i_a};
     assign  {y5,y4,y3,y2,y1,y0} =   {6'b0,i_b};
-    //register the carry in
-    always @(posedge i_clk or negedge i_rstn) begin
-	if(!i_rstn) begin
-	    carry_r1	<=	1'b0;
-   	    carry_r2	<=	1'b0;
-	    carry_r3	<=	1'b0;
-	    carry_r4	<=	1'b0;
-	end
-	else begin
-	    carry_r1	<=	i_carry;
-	    carry_r2	<=	carry_r1;
-	    carry_r3	<=	carry_r2;
-	    carry_r4	<=	carry_r3;
-	end
-    end
 
     //pipeline 1
     always @(posedge i_clk or negedge i_rstn) begin
@@ -165,6 +129,35 @@ module mmm_nlp_90b#(
         end
     end
 
+    `ifdef  LATENCY_3
+    //make multi bits as the unit
+    reg     [ODW-1:0]           shift_r_a_80;
+    reg     [ODW-1:0]           shift_r_b_64;
+    reg     [ODW-1:0]           shift_r_c_72;
+    reg     [ODW-1:0]           shift_r_d_48;
+
+    //make multi bits as the unit
+    reg     [ODW-1:0]           shift_r_136b;
+    reg     [ODW-1:0]           shift_r_120b;
+    reg     [ODW-1:0]           shift_r_104b;
+    reg     [ODW-1:0]           shift_r_152b;
+    reg     [ODW-1:0]           shift_r_128b;
+    //ccarry reg
+    reg                         carry_reg1;
+    reg                         carry_reg2;
+
+    //register the i_carry
+    always @posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            carry_reg1      <=  1'b0;
+            carry_reg2      <=  1'b0;
+        end
+        else begin
+            carry_reg1      <=  i_carry;
+            carry_reg2      <=  carry_reg1;
+        end 
+    end
+
     //the conb of the multi result
     always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn) begin
@@ -191,55 +184,38 @@ module mmm_nlp_90b#(
         end
     end
 
-    //add pipeline register (pipeline1)
-    reg     [ODW-1:0]           add_line1;
-    reg     [ODW-1:0]           add_line2;
-    reg     [ODW-1:0]           add_line3;
-    reg     [ODW-1:0]           add_line4;
-    reg     [ODW-1:0]           add_line5;
-
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn) begin
-            add_line1   <=  {(ODW){1'b0}};
-            add_line2   <=  {(ODW){1'b0}};
-            add_line3   <=  {(ODW){1'b0}};
-            add_line4   <=  {(ODW){1'b0}};
-            add_line5   <=  {(ODW){1'b0}};
-        end
-        else begin
-            add_line1   <=  shift_r_120b + shift_r_a_80;
-            add_line2   <=  shift_r_104b + shift_r_b_64;
-            add_line3   <=  shift_r_152b + shift_r_c_72;
-            add_line4   <=  shift_r_128b + shift_r_d_48;
-            add_line5   <=  shift_r_136b;
-        end
-    end
-
-    //add pipeline register (pipeline2)
-    reg     [ODW-1:0]           add_line6;
-    reg     [ODW-1:0]           add_line7;
-    reg     [ODW-1:0]           add_line8;
-
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn) begin
-            add_line6   <=  {(ODW){1'b0}};
-            add_line7   <=  {(ODW){1'b0}};
-            add_line8   <=  {(ODW){1'b0}};
-        end
-        else begin
-            add_line6   <=  add_line1 + add_line2;
-            add_line7   <=  add_line3 + add_line4;
-            add_line8   <=  add_line5;
-        end
-    end
-
     always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn)
-            res     <=  {ODW{1'b0}};
-        else
-            res     <=  add_line6 + add_line7 + add_line8 + carry_r4;
+            o_res   <=  {(ODW{1'b0})};
+        else 
+            o_res   <=  shift_r_136b + shift_r_120b + shift_r_104b + shift_r_152b +
+                        shift_r_128b + shift_r_a_80 + shift_r_b_64 + shift_r_c_72 + 
+                        shift_r_d_48 + carry_reg2;
     end
 
-    assign  o_res   =   res;
+    `else //LATENCY 2
+    //ccarry reg
+    reg                         carry_reg1;
+
+    //register the i_carry
+    always @posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            carry_reg1      <=  1'b0;
+        end
+        else begin
+            carry_reg1      <=  i_carry;
+        end 
+    end
+    
+    //add all result
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn)
+            o_res   <=  {(ODW{1'b0})};
+        else 
+            o_res   <=  {x3y4,x2y3,x1y2,x0y1} << 16 + {x3y3,x2y2,x1y1,x0y0} + {x3y2,x2y1,x1y0} << 24 + 
+                        {x3y5,x2y4,x1y3,x0y2} << 32 + {x2y5,x1y4,x0y3} << 48 + {x0y5} << 80 +
+                        {x1y5,x0y4} << 64 + {x3y0} << 72 + {x3y1,x2y0} << 48 + carry_reg1;
+    end
+    `endif
     
 endmodule   
