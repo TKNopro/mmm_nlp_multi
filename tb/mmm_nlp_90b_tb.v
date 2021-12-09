@@ -19,7 +19,8 @@ module mmm_nlp_90b_tb;
     //simulation register
     reg     [ODW-1:0]       sim_ret;
     reg     [ODW-1:0]       sim_ret_1;
-    reg     [ODW-1:0]       sim_ret_2; 
+    reg     [ODW-1:0]       sim_ret_2;
+    reg     [ODW-1:0]       sim_ret_3; 
     reg  		    carry_r1;
     wire    [ODW-1:0]       res;
 
@@ -49,11 +50,13 @@ module mmm_nlp_90b_tb;
         if(!rstn) begin
             sim_ret_1   <=  {(ODW){1'b0}};
             sim_ret_2   <=  {(ODW){1'b0}};
+            sim_ret_3	<=  {(ODW){1'b0}};
             sim_ret     <=  {(ODW){1'b0}};
         end 
         else begin
             sim_ret_1   <=  a * b + carry;
             sim_ret_2   <=  sim_ret_1;
+  	    sim_ret_3	<=  sim_ret_2;
             sim_ret     <=  sim_ret_2;
         end
     end
@@ -62,7 +65,8 @@ module mmm_nlp_90b_tb;
         .ODW        (ODW),
         .IDW        (IDW),
         .OAW        (OAW),
-        .OBW        (OBW))
+        .OBW        (OBW),
+	.LATENCY3   (1))
     u_mmm_nlp_90b   (
         .i_clk      (clk),
         .i_rstn     (rstn),

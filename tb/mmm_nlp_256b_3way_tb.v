@@ -14,6 +14,7 @@ module mmm_nlp_90b_tb;
     reg                     rstn;
     reg     [IDW-1:0]       a;
     reg     [IDW-1:0]       b;
+    reg     [IDW-1:0]       m;
     //simulation register
     reg     [ODW-1:0]       sim_ret;
     reg     [ODW-1:0]       sim_ret_1;

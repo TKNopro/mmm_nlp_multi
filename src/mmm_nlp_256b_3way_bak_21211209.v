@@ -21,8 +21,7 @@ module mmm_nlp_256b_3way#(
     localparam      MRW     =   181;
     localparam      DIVA    =   DIVW + 1;
     localparam      MIW     =   90;
-    //output signal
-    reg     [ODW-1:0]       res;
+
     //defination of reg and wire
     wire    [DIVW-1:0]      a00;
     wire    [DIVW-1:0]      a01;
@@ -111,80 +110,7 @@ module mmm_nlp_256b_3way#(
     ////////////////////////////////////////////////
     assign  {a02,a01,a00}       =   {5'b0,i_a};
     assign  {b02,b01,b00}       =   {5'b0,i_b};
-
-    ///////////to register the input of i_m/////////
-    generate
-        if(LATENCY3) begin
-            reg [IDW-1:0]       m_reg1;
-            reg [IDW-1:0]       m_reg2;
-            reg [IDW-1:0]       m_reg3;
-            reg [IDW-1:0]       m_reg4;
-            reg [IDW-1:0]       m_reg5;
-            reg [IDW-1:0]       m_reg6;
-            reg [IDW-1:0]       m_reg7;
-            reg [IDW-1:0]       m_reg8;
-            reg [IDW-1:0]       m_reg9;
-            
-            always @(posedge i_clk or negedge i_rstn) begin
-                if(!i_rstn) begin
-                    m_reg1      <=  {(IDW){1'b0}};
-                    m_reg2      <=  {(IDW){1'b0}};
-                    m_reg3      <=  {(IDW){1'b0}};
-                    m_reg4      <=  {(IDW){1'b0}};
-                    m_reg5      <=  {(IDW){1'b0}};
-                    m_reg6      <=  {(IDW){1'b0}};
-                    m_reg7      <=  {(IDW){1'b0}};
-                    m_reg8      <=  {(IDW){1'b0}};
-                    m_reg9      <=  {(IDW){1'b0}};
-                end
-                else begin
-                    m_reg1      <=  i_m;
-                    m_reg2      <=  m_b_reg1;
-                    m_reg3      <=  m_b_reg2;
-                    m_reg4      <=  m_b_reg3;
-                    m_reg5      <=  m_b_reg4;
-                    m_reg6      <=  m_b_reg5;
-                    m_reg7      <=  m_b_reg6;
-                    m_reg8      <=  m_b_reg7;
-                    m_reg9      <=  m_b_reg8;
-                end
-            end
-
-            assign  {m02,m01,m00} =   {5'b0,m_b_reg9};
-        end
-        else begin
-            reg [IDW-1:0]       m_reg1;
-            reg [IDW-1:0]       m_reg2;
-            reg [IDW-1:0]       m_reg3;
-            reg [IDW-1:0]       m_reg4;
-            reg [IDW-1:0]       m_reg5;
-            reg [IDW-1:0]       m_reg6;
-            reg [IDW-1:0]       m_reg7;
-            
-            always @(posedge i_clk or negedge i_rstn) begin
-                if(!i_rstn) begin
-                    m_reg1      <=  {(IDW){1'b0}};
-                    m_reg2      <=  {(IDW){1'b0}};
-                    m_reg3      <=  {(IDW){1'b0}};
-                    m_reg4      <=  {(IDW){1'b0}};
-                    m_reg5      <=  {(IDW){1'b0}};
-                    m_reg6      <=  {(IDW){1'b0}};
-                    m_reg7      <=  {(IDW){1'b0}};
-                end
-                else begin
-                    m_reg1      <=  i_m;
-                    m_reg2      <=  m_b_reg1;
-                    m_reg3      <=  m_b_reg2;
-                    m_reg4      <=  m_b_reg3;
-                    m_reg5      <=  m_b_reg4;
-                    m_reg6      <=  m_b_reg5;
-                    m_reg7      <=  m_b_reg6;
-                end
-            end
-
-            assign  {m02,m01,m00} =   {5'b0,m_b_reg6};
-        end
-    endgenerate
+    assign  {m02,m01,m00}       =   {5'b0,i_m};
 
     //////////to register the input of i_m_b////////
     generate
@@ -193,33 +119,7 @@ module mmm_nlp_256b_3way#(
             reg [IDW-1:0]       m_b_reg2;
             reg [IDW-1:0]       m_b_reg3;
             reg [IDW-1:0]       m_b_reg4;
-            reg [IDW-1:0]       m_b_reg5;
             
-            always @(posedge i_clk or negedge i_rstn) begin
-                if(!i_rstn) begin
-                    m_b_reg1    <=  {(IDW){1'b0}};
-                    m_b_reg2    <=  {(IDW){1'b0}};
-                    m_b_reg3    <=  {(IDW){1'b0}};
-                    m_b_reg4    <=  {(IDW){1'b0}};
-                    m_b_reg5    <=  {(IDW){1'b0}};
-                end
-                else begin
-                    m_b_reg1    <=  i_m_b;
-                    m_b_reg2    <=  m_b_reg1;
-                    m_b_reg3    <=  m_b_reg2;
-                    m_b_reg4    <=  m_b_reg3;
-                    m_b_reg5    <=  m_b_reg4;
-                end
-            end
-
-            assign  {m_b02,m_b01,m_b00} =   {5'b0,m_b_reg5};
-        end
-        else begin
-            reg [IDW-1:0]       m_b_reg1;
-            reg [IDW-1:0]       m_b_reg2;
-            reg [IDW-1:0]       m_b_reg3;
-            reg [IDW-1:0]       m_b_reg4;
-
             always @(posedge i_clk or negedge i_rstn) begin
                 if(!i_rstn) begin
                     m_b_reg1    <=  {(IDW){1'b0}};
@@ -236,6 +136,26 @@ module mmm_nlp_256b_3way#(
             end
 
             assign  {m_b02,m_b01,m_b00} =   {5'b0,m_b_reg4};
+        end
+        else begin
+            reg [IDW-1:0]       m_b_reg1;
+            reg [IDW-1:0]       m_b_reg2;
+            reg [IDW-1:0]       m_b_reg3;
+
+            always @(posedge i_clk or negedge i_rstn) begin
+                if(!i_rstn) begin
+                    m_b_reg1    <=  {(IDW){1'b0}};
+                    m_b_reg2    <=  {(IDW){1'b0}};
+                    m_b_reg3    <=  {(IDW){1'b0}};
+                end
+                else begin
+                    m_b_reg1    <=  i_m_b;
+                    m_b_reg2    <=  m_b_reg1;
+                    m_b_reg3    <=  m_b_reg2;
+                end
+            end
+
+            assign  {m_b02,m_b01,m_b00} =   {5'b0,m_b_reg3};
         end
     endgenerate
     //////////to register the input of i_m_b////////
@@ -441,7 +361,7 @@ module mmm_nlp_256b_3way#(
     //the output of the stage 1 in algorithm2
     always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn) begin
-            {t5,t4,t3,t2,t1,t0} <=  {(6*DIVW){1'b0}};
+            {t5,t4,t3,t2,t1,t0} <=  {(5*DIVW){1'b0}};
             {u2,u1,u0}          <=  {(3*DIVW){1'b0}};
             u                   <=  {(3*DIVW){1'b0}};
         end
@@ -510,8 +430,6 @@ module mmm_nlp_256b_3way#(
     end
 
     //The multiplexer of the algorithm in stage 2
-    //the multiplexer of stage 2
-    //3 cycle
     mmm_nlp_90b #(
         .ODW        (181),
         .IDW        (90),
@@ -550,7 +468,7 @@ module mmm_nlp_256b_3way#(
     ) u_mmm_nlp_90b_9 (
         .i_clk      (i_clk),
         .i_rstn     (i_rstn),    
-        .i_a        (u0_),
+        .i_a        (u2_),
         .i_b        (m2_),
         .i_carry    (0),
 
@@ -587,6 +505,21 @@ module mmm_nlp_256b_3way#(
         .o_res      (u2m0)
     );
 
+    mmm_nlp_90b #(
+        .ODW        (181),
+        .IDW        (90),
+        .OAW        (24),
+        .OBW        (16)
+    ) u_mmm_nlp_90b_12 (
+        .i_clk      (i_clk),
+        .i_rstn     (i_rstn),    
+        .i_a        (u0_),
+        .i_b        (m2_),
+        .i_carry    (0),
+
+        .o_res      (u0m2)
+    );
+
     always @(*) begin
         {P0H,P0L}       =   u0m0[173:0];
         {P1H,P1L}       =   u1m1[173:0];
@@ -595,158 +528,23 @@ module mmm_nlp_256b_3way#(
         {PP20H,PP20L}   =   u2m0 + PP02 + P1 + P01H;
     end   
 
-    //the output of the stage 2 result
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn)
-            Q           <=  {(3*DIVW){1'b0}};
-        else 
-            Q           <=  u0m0 + ((u0u1_m_m0m1 - u0m0 - u1m1) << 87) + ((u0m2 + u2m0 + u1m1) << 174);
-    end
-
-    ////////////////////////////////////////////////
-    //The third step of the MMM multiplication
-    ////////////////////////////////////////////////
-    //the signal of the stage 3
-    reg [DIVW-1:0]          q0;
-    reg [DIVW-1:0]          q1;
-    reg [DIVW-1:0]          q2;
-
-    reg [MIW-1:0]           q0_;
-    reg [MIW-1:0]           q1_;
-    reg [MIW-1:0]           q2_;
-
-    reg [MIW-1:0]           m0;
-    reg [MIW-1:0]           m1;
-    reg [MIW-1:0]           m2;
+    always @(*) begin
+        P0              =   {P0H,P0L};
+        P1              =   {P1H,P1L};
+    end  
 
     always @(*) begin
-        {q2,q1,q0}      =   Q;
-    end
+        QT0             =   u0m0;
+        QT1             =   (u0u1_m_m0m1 - u0m0 - u1m1) << 87;
+        QT2             =   (u0m2 + u2m0 + u1m1) << 174;
+    end 
 
-    always @(*) begin
-        q2_             =   {3'b0,q2};
-        q1_             =   {3'b0,q1};
-        q0_             =   {3'b0,q0};
-    end
+    assign  QT = QT2 + QT1 + QT0;   
 
-    always @(*) begin
-        m2              =   {3'b0,m02};
-        m1              =   {3'b0,m01};
-        m0              =   {3'b0,m00};
-    end
+    always @(*) begin   
+        Q               =   {PP20L,P01L,P0L};
+    end 
 
-    //The multiplexer of the algorithm in stage 3
-    //the multiplexer of stage 3
-    //3 cycle
-    wire[MRW-1:0]           q0_m2;
-    wire[MRW-1:0]           q1_m1;
-    wire[MRW-1:0]           q2_m2;
-    wire[MRW-1:0]           q2_m0;
-    wire[MRW-1:0]           q1_q2_m_m1m2;
-
-    reg [MIW-1:0]           q1_a_q2;
-    reg [MIW-1:0]           m1_a_m2;
-
-    reg [ODW-1:0]           s3_line1;
-    reg [ODW-1:0]           s3_line2;
-    reg [ODW-1:0]           s3_line3;
-
-    always @(*) begin
-        q1_a_q2     =   q1_ + q2_;
-        m1_a_m2     =   m1 + m2;
-    end
-
-    //The multiplexer of the algorithm in stage 3
-    //the multiplexer of stage 3
-    //3 cycle
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_12 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (q0_),
-        .i_b        (m2),
-        .i_carry    (0),
-
-        .o_res      (q0_m2)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_13 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (q1_),
-        .i_b        (m1),
-        .i_carry    (0),
-
-        .o_res      (q1_m1)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_14 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (q2_),
-        .i_b        (m2),
-        .i_carry    (0),
-
-        .o_res      (q2_m2)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_15 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (q1_a_q2),
-        .i_b        (m1_a_m2),
-        .i_carry    (0),
-
-        .o_res      (q1_q2_m_m1m2)
-    );
-
-    mmm_nlp_90b #(
-        .ODW        (181),
-        .IDW        (90),
-        .OAW        (24),
-        .OBW        (16)
-    ) u_mmm_nlp_90b_12 (
-        .i_clk      (i_clk),
-        .i_rstn     (i_rstn),    
-        .i_a        (q2_),
-        .i_b        (m0),
-        .i_carry    (0),
-
-        .o_res      (q2_m0)
-    );
-
-    always @(*) begin
-        s3_line1    =   q0_m2 + q2_m0 + q1_m1;
-        s3_line2    =   q1_q2_m_m1m2 - q1_m1 - q2_m2;
-        s3_line3    =   q2_m2; 
-    end
-
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn)
-            res     =   {(ODW){1'b0}};
-        else
-            res     =   (s3_line1) + (s3_line2 << DIVW) + (s3_line3 << (2*DIVW));
-    end
-
-    assign  o_res   =   res;
+    assign  o_res       =   QT;
 
 endmodule

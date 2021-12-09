@@ -1,10 +1,14 @@
 //the mmm mult of with the NLP
 //author : Lee
+
+//`define	LATENCY3	1
+
 module mmm_nlp_90b#(
     parameter       ODW         =       181,
     parameter       IDW         =       90,
     parameter       OAW         =       24,
-    parameter       OBW         =       16
+    parameter       OBW         =       16,
+    parameter       LATENCY3	=	    1
 )(
     //system sigals
     input                       i_clk,
@@ -14,7 +18,7 @@ module mmm_nlp_90b#(
     input   [IDW-1:0]           i_b,
     input                       i_carry,
 
-    output  reg [ODW-1:0]       o_res
+    output  [ODW-1:0]           o_res
 );
     //parameter defination 
     localparam      RESW        =       OAW + OBW;
@@ -23,6 +27,7 @@ module mmm_nlp_90b#(
     localparam      HSW         =       93;
 
     //defination of wire and reg
+    reg     [ODW-1:0]           res;
     wire    [OAW-1:0]           x0;
     wire    [OAW-1:0]           x1;
     wire    [OAW-1:0]           x2;
@@ -129,93 +134,97 @@ module mmm_nlp_90b#(
         end
     end
 
-    `ifdef  LATENCY_3
-    //make multi bits as the unit
-    reg     [ODW-1:0]           shift_r_a_80;
-    reg     [ODW-1:0]           shift_r_b_64;
-    reg     [ODW-1:0]           shift_r_c_72;
-    reg     [ODW-1:0]           shift_r_d_48;
+    generate
+        if(LATENCY3) begin
+            reg                         carry_reg1;
+            reg                         carry_reg2;
+            //make multi bits as the unit
+            reg     [ODW-1:0]           shift_r_a_80;
+            reg     [ODW-1:0]           shift_r_b_64;
+            reg     [ODW-1:0]           shift_r_c_72;
+            reg     [ODW-1:0]           shift_r_d_48;
 
-    //make multi bits as the unit
-    reg     [ODW-1:0]           shift_r_136b;
-    reg     [ODW-1:0]           shift_r_120b;
-    reg     [ODW-1:0]           shift_r_104b;
-    reg     [ODW-1:0]           shift_r_152b;
-    reg     [ODW-1:0]           shift_r_128b;
-    //ccarry reg
-    reg                         carry_reg1;
-    reg                         carry_reg2;
+            //make multi bits as the unit
+            reg     [ODW-1:0]           shift_r_136b;
+            reg     [ODW-1:0]           shift_r_120b;
+            reg     [ODW-1:0]           shift_r_104b;
+            reg     [ODW-1:0]           shift_r_152b;
+            reg     [ODW-1:0]           shift_r_128b;
+            //ccarry reg
+            reg                         carry_reg1;
+            reg                         carry_reg2;
 
-    //register the i_carry
-    always @posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn) begin
-            carry_reg1      <=  1'b0;
-            carry_reg2      <=  1'b0;
+            //register the i_carry
+            always @(posedge i_clk or negedge i_rstn) begin
+                if(!i_rstn) begin
+                    carry_reg1      <=  1'b0;
+                    carry_reg2      <=  1'b0;
+                end
+                else begin
+                    carry_reg1      <=  i_carry;
+                    carry_reg2      <=  carry_reg1;
+                end 
+            end
+
+            //the conb of the multi result
+            always @(posedge i_clk or negedge i_rstn) begin
+                if(!i_rstn) begin
+                    shift_r_136b    <=  {ODW{1'b0}};
+                    shift_r_120b    <=  {ODW{1'b0}};
+                    shift_r_104b    <=  {ODW{1'b0}};
+                    shift_r_152b    <=  {ODW{1'b0}};
+                    shift_r_128b    <=  {ODW{1'b0}};
+                    shift_r_a_80    <=  {ODW{1'b0}};
+                    shift_r_b_64    <=  {ODW{1'b0}};
+                    shift_r_c_72    <=  {ODW{1'b0}};
+                    shift_r_d_48    <=  {ODW{1'b0}};
+                end
+                else begin
+                    shift_r_136b    <=  {x3y4,x2y3,x1y2,x0y1} << 16;
+                    shift_r_120b    <=  {x3y3,x2y2,x1y1,x0y0};
+                    shift_r_104b    <=  {x3y2,x2y1,x1y0} << 24;
+                    shift_r_152b    <=  {x3y5,x2y4,x1y3,x0y2} << 32;
+                    shift_r_128b    <=  {x2y5,x1y4,x0y3} << 48;
+                    shift_r_a_80    <=  {x0y5} << 80;
+                    shift_r_b_64    <=  {x1y5,x0y4} << 64;
+                    shift_r_c_72    <=  {x3y0} << 72;
+                    shift_r_d_48    <=  {x3y1,x2y0} << 48;
+                end
+            end
+
+            always @(posedge i_clk or negedge i_rstn) begin
+                if(!i_rstn)
+                    res     <=  {(ODW){1'b0}};
+                else 
+                    res     <=  shift_r_136b + shift_r_120b + shift_r_104b + shift_r_152b + shift_r_128b + shift_r_a_80 + shift_r_b_64 + shift_r_c_72 + shift_r_d_48 + carry_reg2;
+            end
         end
         else begin
-            carry_reg1      <=  i_carry;
-            carry_reg2      <=  carry_reg1;
-        end 
-    end
+            //ccarry reg
+            reg                         carry_reg1;
 
-    //the conb of the multi result
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn) begin
-            shift_r_136b    <=  {ODW{1'b0}};
-            shift_r_120b    <=  {ODW{1'b0}};
-            shift_r_104b    <=  {ODW{1'b0}};
-            shift_r_152b    <=  {ODW{1'b0}};
-            shift_r_128b    <=  {ODW{1'b0}};
-            shift_r_a_80    <=  {ODW{1'b0}};
-            shift_r_b_64    <=  {ODW{1'b0}};
-            shift_r_c_72    <=  {ODW{1'b0}};
-            shift_r_d_48    <=  {ODW{1'b0}};
+            //register the i_carry
+            always @(posedge i_clk or negedge i_rstn) begin
+                if(!i_rstn) begin
+                    carry_reg1      <=  1'b0;
+                end
+                else begin
+                    carry_reg1      <=  i_carry;
+                end 
+            end
+
+            //add all result
+            always @(posedge i_clk or negedge i_rstn) begin
+                if(!i_rstn)
+                    res     <=  {(ODW){1'b0}};
+                else 
+                    res     <=  {x3y4,x2y3,x1y2,x0y1} << 16 + {x3y3,x2y2,x1y1,x0y0} + {x3y2,x2y1,x1y0} << 24 + 
+                                {x3y5,x2y4,x1y3,x0y2} << 32 + {x2y5,x1y4,x0y3} << 48 + {x0y5} << 80 +
+                                {x1y5,x0y4} << 64 + {x3y0} << 72 + {x3y1,x2y0} << 48 + carry_reg1;
+            end
         end
-        else begin
-            shift_r_136b    <=  {x3y4,x2y3,x1y2,x0y1} << 16;
-            shift_r_120b    <=  {x3y3,x2y2,x1y1,x0y0};
-            shift_r_104b    <=  {x3y2,x2y1,x1y0} << 24;
-            shift_r_152b    <=  {x3y5,x2y4,x1y3,x0y2} << 32;
-            shift_r_128b    <=  {x2y5,x1y4,x0y3} << 48;
-            shift_r_a_80    <=  {x0y5} << 80;
-            shift_r_b_64    <=  {x1y5,x0y4} << 64;
-            shift_r_c_72    <=  {x3y0} << 72;
-            shift_r_d_48    <=  {x3y1,x2y0} << 48;
-        end
-    end
+    endgenerate
 
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn)
-            o_res   <=  {(ODW{1'b0})};
-        else 
-            o_res   <=  shift_r_136b + shift_r_120b + shift_r_104b + shift_r_152b +
-                        shift_r_128b + shift_r_a_80 + shift_r_b_64 + shift_r_c_72 + 
-                        shift_r_d_48 + carry_reg2;
-    end
-
-    `else //LATENCY 2
-    //ccarry reg
-    reg                         carry_reg1;
-
-    //register the i_carry
-    always @posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn) begin
-            carry_reg1      <=  1'b0;
-        end
-        else begin
-            carry_reg1      <=  i_carry;
-        end 
-    end
-    
-    //add all result
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn)
-            o_res   <=  {(ODW{1'b0})};
-        else 
-            o_res   <=  {x3y4,x2y3,x1y2,x0y1} << 16 + {x3y3,x2y2,x1y1,x0y0} + {x3y2,x2y1,x1y0} << 24 + 
-                        {x3y5,x2y4,x1y3,x0y2} << 32 + {x2y5,x1y4,x0y3} << 48 + {x0y5} << 80 +
-                        {x1y5,x0y4} << 64 + {x3y0} << 72 + {x3y1,x2y0} << 48 + carry_reg1;
-    end
-    `endif
+    assign  o_res = res;
     
 endmodule   
