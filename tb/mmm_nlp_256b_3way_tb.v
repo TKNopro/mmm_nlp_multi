@@ -2,9 +2,9 @@
 //author ： Lee
 `timescale 1ns/1ns
 
-module mmm_nlp_90b_tb;
+module mmm_nlp_90b_pip_tb;
     //defination of paramete 
-    parameter       ODW         =       522;
+    parameter       ODW         =       256;
     parameter       IDW         =       256;
     parameter       DIVW        =       87;
     parameter       CYC         =       10;
@@ -12,15 +12,18 @@ module mmm_nlp_90b_tb;
     //defination of signals
     reg                     clk;
     reg                     rstn;
-    reg     [IDW-1:0]       a;
-    reg     [IDW-1:0]       b;
+    reg     [3*IDW-1:0]     a;
+    reg     [3*IDW-1:0]     b;
     reg     [IDW-1:0]       m;
+    reg     [IDW+2:0]       m_b;
+    reg     [IDW+3:0]       r;
+    reg     [3*IDW-1:0]     mod_inv;
     //simulation register
-    reg     [ODW-1:0]       sim_ret;
-    reg     [ODW-1:0]       sim_ret_1;
-    reg     [ODW-1:0]       sim_ret_2;
-    reg     [ODW-1:0]       sim_ret_3;
-    reg     [ODW-1:0]       sim_ret_4;
+    reg     [IDW-1:0]       sim_ret;
+    reg     [IDW-1:0]       sim_ret_1;
+    reg     [IDW-1:0]       sim_ret_2;
+    reg     [IDW-1:0]       sim_ret_3;
+    reg     [IDW-1:0]       sim_ret_4;
 
     wire    [ODW-1:0]       res;
 
@@ -35,15 +38,34 @@ module mmm_nlp_90b_tb;
     //generate the input signals
     always@(posedge clk or negedge rstn) begin
         if(!rstn) begin
-            a   <=  {(IDW){1'b0}};
-            b   <=  {(IDW){1'b0}};
+            a       <=  {(3*IDW){1'b0}};
+            b       <=  {(3*IDW){1'b0}};
+            m       <=  {(IDW){1'b0}};
+            m_b     <=  {(IDW){1'b0}};
+            mod_inv <=  {(3*IDW){1'b0}};
         end
         else begin
-            a   <=  {{$random},{$random},{$random},{$random},{$random},{$random},{$random},{$random}};
-            b   <=  {{$random},{$random},{$random},{$random},{$random},{$random},{$random},{$random}};
+            a       <=  {256'b0,256'hf913b410fe0d6b547a64ce68e9b7430214e56ec57e37d50dc22be4fe5e5f8d2f};
+            b       <=  {256'b0,256'h0de6501bd55b07ce9c83bbcbba280e5700e53c152304f6a1ab183a7b2e16e308};
+            m       <=  {256'b0,256'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f};
+            m_b     <=  {253'b0,259'hac9bd1905155383999c46c2c295f2b761bcb223fedc24a059d838091dd2253531};
+            mod_inv <=  {256'b0,256'h5937a320a2aa70733388d85852be56ec3796447fdb84940b3b070123610d0231};
         end
     end
 
+    //the model of the xx*yy*r^(-1) mod m
+    always @(posedge clk or negedge rstn) begin
+        if(!rstn)
+            r           <=  260'b0;
+        else  
+            r           <=  2**(259);
+    end
+    
+    always @(*) begin
+        sim_ret_1       =  (a * b * mod_inv) % m;
+    end
+
+    /*
     always @(posedge clk or negedge rstn) begin
         if(!rstn) begin
             sim_ret_1   <=  {(ODW){1'b0}};
@@ -53,13 +75,15 @@ module mmm_nlp_90b_tb;
             sim_ret     <=  {(ODW){1'b0}};
         end 
         else begin
-            sim_ret_1   <=  a * b;
+            sim_ret_1   <=  a * b * mod_inv % m;
             sim_ret_2   <=  sim_ret_1;
             sim_ret_3   <=  sim_ret_2;
             sim_ret_4   <=  sim_ret_3;
             sim_ret     <=  sim_ret_3;
         end
     end
+    */
+
     //instance of the DUT
     mmm_nlp_256b_3way #(
         .ODW        (ODW),
@@ -68,8 +92,10 @@ module mmm_nlp_90b_tb;
     u_mmm_nlp_256b_3way   (
         .i_clk      (clk),
         .i_rstn     (rstn),
-        .i_a        (a),
-        .i_b        (b),
+        .i_a        (a[255:0]),
+        .i_b        (b[255:0]),
+        .i_m        (m[255:0]),
+        .i_m_b      (m_b[258:0]),
 
         .o_res      (res)
     );
@@ -97,7 +123,8 @@ module mmm_nlp_90b_tb;
         #20;
         rstn    =   1;
         $display("######\tFinish to reset tne DUT\t######");
-
+        #1000;
+        /*
         while (1) begin
             @(posedge clk) begin
                 if (sim_ret!=res) begin
@@ -106,7 +133,7 @@ module mmm_nlp_90b_tb;
                     $stop;
                 end 
                 else begin
-                    $display("######\tSuccessfully!\t######");
+                    $display("######\tSuccessfully!\t\t######");
                 //$display("\t%5d:0x%x == 0x%x",sim_times,sim_ret,res);
                 end
 
@@ -118,47 +145,27 @@ module mmm_nlp_90b_tb;
                 end
             end
         end
+        */
 
         $finish;
     end
 endmodule
 
 /*
-always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn) begin
-            P2H     <=  {ODW{1'b0}};
-            P2L     <=  {ODW{1'b0}};
-            P12L    <=  {ODW{1'b0}};
-            P02L    <=  {ODW{1'b0}};
-            P01L    <=  {ODW{1'b0}};
-            P0L     <=  {ODW{1'b0}};
-        end
-        else begin
-            P2H     <=  p2h <<  (5*DIVW);
-            P2L     <=  (p2l + p12h) << (4*DIVW);       
-            P12L    <=  (p12l + p02h) << (3*DIVW);
-            P02L    <=  p02l << (2*DIVW);
-            P01L    <=  p01l << (DIVW);
-            P0L     <=  p0l;
-        end
-    end
+    a * b * mod_inv mod m
+    python      :0xa91e3f31c6fdc331151c02aa1aa13563110c6402f35f6ba6fa7e59a49ad4497e
+    verilog     :0xf2a9960f3f073404e31238e59d4c3b9e73e87f14aa40dc0d8d926f2185d03cf8
+    verilog_fix :0xa91e3f31c6fdc331151c02aa1aa13563110c6402f35f6ba6fa7e59a49ad4497e
 
-    always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn) begin
-            {p0h,p0l}   <=  {(2*DIVW){1'b0}};
-            {p1h,p1l}   <=  {(2*DIVW){1'b0}};
-            {p2h,p2l}   <=  {(2*DIVW){1'b0}};
-            {p01h,p01l} <=  {(2*DIVW+1){1'b0}};
-            {p02h,p02l} <=  {(2*DIVW+1){1'b0}};
-            {p12h,p12l} <=  {(2*DIVW+1){1'b0}};
-        end
-        else begin
-            {p0h,p0l}   <=  a0b0[173:0];
-            {p1h,p1l}   <=  a1b1[173:0];
-            {p2h,p2l}   <=  a2b2[173:0];
-            {p01h,p01l} <=  a0a1_m_b0b1 - p0 - p1 + p0h;
-            {p02h,p02l} <=  a0a2_m_b0b2 + p1 - p0 - p2 + p01h;
-            {p12h,p12l} <=  a1a2_m_b1b2 - p1 - p2;
-        end
-    end
+    a * b mod m
+    python      :0x9b67814c1c8f87dd543b0495924918b81d48d74e4d418f3a0135576b852a2df9
+    verilog     :0x1d9427bb9d0978fd282e01531130ace9a3a20d29a716b6f1ff8b78cb41371678
+    verilog_fix :0x9b67814c1c8f87dd543b0495924918b81d48d74e4d418f3a0135576b852a2df9
+
+    a * b * mod_inv mod m
+    python      :0xa91e3f31c6fdc331151c02aa1aa13563110c6402f35f6ba6fa7e59a49ad4497e
+@0: DUT_res     :0x138d319067721ca7e92731b76611df6e514d5c77fd47e99221023e674919d893
+@1: DUT_res     :0x138d319067721ca7e92731b76611df6e518d5c78f187e99221023e674919d893
+@2: DUT_res     :0x138d319067721ca7e92731b76611df6e518d5c78f187e99221023e674919d893
+
 */

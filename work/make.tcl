@@ -11,7 +11,8 @@
  # source file
  #############################
   import_files -norecurse ../src/mmm_nlp_256b_3way.v
-  import_files -norecurse ../src/mmm_nlp_90b_5stage.v
+  import_files -norecurse ../src/mmm_nlp_90b_pip.v
+  import_files -norecurse ../src/mmm_nlp_shift_reg.v
  # import_files -norecurse ../src/mmm_r2mm.v
  # import_files -norecurse ../src/mmp/mmp_iddmm_pe.v
  # import_files -norecurse ../src/mmp/mmp_iddmm_addend.v

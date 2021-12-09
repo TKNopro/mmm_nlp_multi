@@ -1,6 +1,6 @@
 //The shift reg for the design which is used to delay
 //author : Lee
-module mmp_iddmm_shift#(
+module mmm_nlp_shift_reg#(
     parameter LATENCY           = 4   ,
     parameter WD                = 256
 )(
