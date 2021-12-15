@@ -27,6 +27,8 @@
  # simulation file
  #############################
  import_files -fileset sim_1 -norecurse ../tb/mmm_nlp_256b_3way_tb.v
+ import_files -fileset sim_1 -norecurse ../src/mmm_nlp_shift_reg.v
+
  update_compile_order -fileset sim_1
  update_compile_order -fileset sim_1
  #############################

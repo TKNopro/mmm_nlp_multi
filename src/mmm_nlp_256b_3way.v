@@ -1,10 +1,10 @@
 //the mmm mult with the NLP form
 //author : Lee
 module mmm_nlp_256b_3way#(
-    parameter       DW3         =   522,
     parameter       ODW         =   256,
     parameter       IDW         =   256,
     parameter       DIVW        =   87,
+    parameter       DW3         =   DIVW*6,
     parameter       LATENCY3    =   1
 )(
     //system signals
@@ -22,7 +22,7 @@ module mmm_nlp_256b_3way#(
     localparam      MRW     =   181;
     localparam      MIW     =   90;
     //output signal
-    reg     [ODW-1:0]       res;
+    reg     [4*DIVW-1:0]    res;
     //defination of reg and wire
     wire    [DIVW-1:0]      a00;
     wire    [DIVW-1:0]      a01;
@@ -82,19 +82,21 @@ module mmm_nlp_256b_3way#(
     reg     [2*DIVW:0]      p02;
     reg     [2*DIVW:0]      p12;
 
+    wire    [IDW-1:0]       m_reg;
+
     //the reg of the line
     /*
     reg     [DW3-1:0]       line02;
     reg     [DW3-1:0]       line03;
     reg     [DW3-1:0]       line04;
-    
+    */
 
     reg     [DW3-1:0]       line1;
     reg     [DW3-1:0]       line2;
     reg     [DW3-1:0]       line3;
     reg     [DW3-1:0]       line4;
     reg     [DW3-1:0]       line5;
-    */
+    
 
     wire    [DW3-1:0]       T;
     wire    [DW3-1:0]       T_;
@@ -155,7 +157,8 @@ module mmm_nlp_256b_3way#(
                 end
             end
 
-            assign  {m02,m01,m00} =   {5'b0,m_reg9};
+            assign  {m02,m01,m00} =     {5'b0,m_reg9};
+            assign  m_reg         =     m_reg9;
         end
         else begin
             reg [IDW-1:0]       m_reg1;
@@ -187,7 +190,8 @@ module mmm_nlp_256b_3way#(
                 end
             end
 
-            assign  {m02,m01,m00} =   {5'b0,m_reg6};
+            assign  {m02,m01,m00} =     {5'b0,m_reg7};
+            assign  m_reg         =     m_reg7;
         end
     endgenerate
 
@@ -387,18 +391,19 @@ module mmm_nlp_256b_3way#(
     end
     */
     //karatsuba stage 1
-    /*
+    
     always @(*) begin
         line1   =  {{(ODW-MIW){1'b0}},a0b0};
-        line2   =  {{(ODW-MIW){1'b0}},{a0a1_m_b0b1 - a0b0 - a1b1}} << 87;
-        line3   =  {{(ODW-MIW){1'b0}},{a0a2_m_b0b2 - a0b0 - a2b2 + a1b1}} << 174;
-        line4   =  {{(ODW-MIW){1'b0}},{a1a2_m_b1b2 - a1b1 - a2b2}} << 261;
-        line5   =  {{(ODW-MIW){1'b0}},a2b2} << 348;
+        line2   =  {{(ODW-MIW){1'b0}},{a0a1_m_b0b1 - a0b0 - a1b1}} << DIVW;
+        line3   =  {{(ODW-MIW){1'b0}},{a0a2_m_b0b2 - a0b0 - a2b2 + a1b1}} << (2*DIVW);
+        line4   =  {{(ODW-MIW){1'b0}},{a1a2_m_b1b2 - a1b1 - a2b2}} << (3*DIVW);
+        line5   =  {{(ODW-MIW){1'b0}},a2b2} << (4*DIVW);
     end
-    */
+    
     //The reseult of the algrothim in stage 1
-    //assign  T = line1 + line2 + line3 + line4 + line5;
+    assign  T = line1 + line2 + line3 + line4 + line5;
     //register the p MSB and LSB
+    /*
     always @(*) begin
         {p0h,p0l}   =   a0b0[173:0];
         {p1h,p1l}   =   a1b1[173:0];
@@ -428,9 +433,11 @@ module mmm_nlp_256b_3way#(
         P2L         =   p2l;
         P2          =   p2;
     end
+    */
     ////////////////////////////////////////////////////
     // The test part of the stage one 
     ////////////////////////////////////////////////////
+    /*
     reg [DW3-1:0]           TP5;
     reg [DW3-1:0]           TP4;
     reg [DW3-1:0]           TP3;
@@ -446,10 +453,14 @@ module mmm_nlp_256b_3way#(
         TP1     =   p01l << (DIVW);
         TP0     =   p0l;
     end
+    */
 
-
-    assign  T = TP5 + TP4 + TP3 + TP2 + TP1 + TP0;
+    //assign  T = TP5 + TP4 + TP3 + TP2 + TP1 + TP0;
     //the output of the stage 1 in algorithm2
+    integer out_file1;
+    initial begin
+        out_file1    =   $fopen("/home/ldp/graduate/mmm_nlp_multi/work/stage1.txt","w");
+    end
     always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn) begin
             {t5,t4,t3,t2,t1,t0} <=  {(6*DIVW){1'b0}};
@@ -467,8 +478,15 @@ module mmm_nlp_256b_3way#(
         end
     end
 
+    always @(T) begin
+        $fwrite(out_file1,"%x",$unsigned(T));
+        $fwrite(out_file1,"\n");
+    end
+
+    reg [3*DIVW-1:0]             q_mid;
     always @(*) begin
         {u2,u1,u0}      =   {t2,t1,t0};
+        q_mid           =   {t2,t1,t0};
     end 
 
     //register the result T
@@ -520,10 +538,10 @@ module mmm_nlp_256b_3way#(
     reg [DIVW-1:0]          PP20H;
     reg [DIVW-1:0]          PP20L;
 
-    reg [3*DIVW-1:0]        q_line1;
-    reg [3*DIVW-1:0]        q_line2;
-    reg [3*DIVW-1:0]        q_line3;
-    reg [3*DIVW-1:0]        Q;
+    reg [4*DIVW-1:0]        q_line1;
+    reg [4*DIVW-1:0]        q_line2;
+    reg [4*DIVW-1:0]        q_line3;
+    reg [IDW+2:0]           Q;
 
     always @(*) begin
         u0_     =   {3'b0,u0};
@@ -622,6 +640,11 @@ module mmm_nlp_256b_3way#(
         .o_res      (u2m0)
     );
 
+    integer out_file2;
+    initial begin
+        out_file2    =   $fopen("/home/ldp/graduate/mmm_nlp_multi/work/stage2.txt","w");
+    end
+
     always @(*) begin
         {P0H,P0L}       =   u0m0[173:0];
         {P1H,P1L}       =   u1m1[173:0];
@@ -639,9 +662,16 @@ module mmm_nlp_256b_3way#(
     //the output of the stage 2 result
     always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn)
-            Q           <=  {(3*DIVW){1'b0}};
+            Q           <=  {(IDW+3){1'b0}};
         else 
             Q           <=  q_line1 + (q_line2 << DIVW) + (q_line3 << (2*DIVW));
+    end
+
+    //assign o_res    =   Q;
+
+    always @(Q) begin
+        $fwrite(out_file2,"%x",$unsigned(Q));
+        $fwrite(out_file2,"\n");
     end
 
     ////////////////////////////////////////////////
@@ -660,20 +690,32 @@ module mmm_nlp_256b_3way#(
     reg [MIW-1:0]           m1;
     reg [MIW-1:0]           m2;
 
+    reg [IDW+2:0]           Q_;
+
     always @(*) begin
-        {q2,q1,q0}      =   Q[3*DIVW-1:0];
+        {q2,q1,q0}      =   {2'b0,Q};
+        Q_              =   {q2,q1,q0};
+    end
+
+    initial begin
+        if(Q[3*DIVW-1:0] == Q_) begin
+            $display("######\tThe result of Q is correct!\t######\n");
+        end
+        else begin
+            $display("######\tThe result of Q is failed!\t######\n");
+        end
     end
 
     always @(*) begin
-        q2_             =   {3'b0,q2};
-        q1_             =   {3'b0,q1};
-        q0_             =   {3'b0,q0};
+        q2_             =   /*{3'b0,*/q2/*}*/;
+        q1_             =   /*{3'b0,*/q1/*}*/;
+        q0_             =   /*{3'b0,*/q0/*}*/;
     end
 
     always @(*) begin
-        m2              =   {3'b0,m02};
-        m1              =   {3'b0,m01};
-        m0              =   {3'b0,m00};
+        m2              =   /*{3'b0,*/m02/*}*/;
+        m1              =   /*{3'b0,*/m01/*}*/;
+        m0              =   /*{3'b0,*/m00/*}*/;
     end
 
     //The multiplexer of the algorithm in stage 3
@@ -688,9 +730,58 @@ module mmm_nlp_256b_3way#(
     reg [MIW-1:0]           q1_a_q2;
     reg [MIW-1:0]           m1_a_m2;
 
-    reg [ODW-1:0]           s3_line1;
-    reg [ODW-1:0]           s3_line2;
-    reg [ODW-1:0]           s3_line3;
+    reg [4*DIVW-1:0]        s3_line0;
+    reg [4*DIVW-1:0]        s3_line1;
+    reg [4*DIVW-1:0]        s3_line2;
+    reg [4*DIVW-1:0]        s3_line3;
+    reg [4*DIVW-1:0]        s3_cc;
+    reg [4*DIVW-1:0]        s3_cc_reg1;
+    reg [4*DIVW-1:0]        s3_cc_reg2;
+
+    reg [2:0]               q_0_3;
+    reg [2:0]               q_1_3;
+    reg [2:0]               m_0_3;
+    reg [2:0]               m_1_3;
+    reg [6:0]               q0m1;
+    reg [6:0]               q1m0;
+    reg [1:0]               cr_1;
+    reg [DIVW-1:0]          r_1;
+    reg [1:0]               e;
+    //reg [DIVW-1:0]          s3
+
+    always @(*) begin
+        q_0_3       =       q0[DIVW-1:DIVW-3];
+        q_1_3       =       q1[DIVW-1:DIVW-3];
+        m_0_3       =       m00[DIVW-1:DIVW-3];
+        m_1_3       =       m01[DIVW-1:DIVW-3];
+    end
+
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            s3_cc_reg1  <=  {(4*DIVW){1'b0}};
+            s3_cc_reg2  <=  {(4*DIVW){1'b0}};
+            s3_cc       <=  {(4*DIVW){1'b0}};
+        end
+        else begin
+            s3_cc_reg1  <=  (q_0_3 * m_1_3 + q_1_3 * m_0_3) << (DIVW-6);
+            s3_cc_reg2  <=  s3_cc_reg1;
+            s3_cc       <=  s3_cc_reg2;
+        end
+    end
+
+    integer out_filex;
+    initial begin
+        out_filex    =   $fopen("/home/ldp/graduate/mmm_nlp_multi/work/cc.txt","w");
+    end
+
+    always @(s3_cc) begin
+        $fwrite(out_filex,"%b",$unsigned(o_res));
+        $fwrite(out_filex,"\n");
+    end
+
+    //for debug
+    wire [DIVW-1:0]     cc;
+    assign  cc      =   q_0_3 * m_1_3 + q_1_3 * m_0_3;
 
     always @(*) begin
         q1_a_q2     =   q1_ + q2_;
@@ -780,19 +871,80 @@ module mmm_nlp_256b_3way#(
         .o_res      (q2_m0)
     );
 
+    integer out_file3;
+    initial begin
+        out_file3    =   $fopen("/home/ldp/graduate/mmm_nlp_multi/work/stage3.txt","w");
+    end
+
+    
+
+    reg [DIVW-1:0]      cr_a;
+    reg [DIVW-1:0]      cr_b;
+    reg [DIVW-1:0]      cr_c;
     always @(*) begin
-        s3_line1    =   q0_m2 + q2_m0 + q1_m1;
-        s3_line2    =   q1_q2_m_m1m2 - q1_m1 - q2_m2;
-        s3_line3    =   q2_m2; 
+        s3_line0    =   T_[6*DIVW-1:2*DIVW];
+        s3_line1    =   (q0_m2 + q2_m0 + q1_m1)/* << (2*DIVW)*/;
+        s3_line2    =   (q1_q2_m_m1m2 - q1_m1 - q2_m2) << (/*3**/DIVW);
+        s3_line3    =   q2_m2 << (2*DIVW);
+    end
+    //reg [DIVW+2]    all;
+    always @(*) begin
+        {cr_1,r_1}  =   T_[3*DIVW-1:2*DIVW] + s3_line1[DIVW-1:0] + s3_cc[DIVW-1:0];
+        cr_a        =   T_[DIVW-1:0];
+        cr_b        =   s3_line1[DIVW-1:0];
+        cr_c        =   s3_cc[DIVW-1:0];
+    end
+    
+    /////////////////////////////
+    //the way of algo description
+    /////////////////////////////
+    /*
+    reg [2*DIVW-1:0]    st3_pp02;
+    reg [2*DIVW-1:0]    st3_p1;
+    reg [2*DIVW-1:0]    st3_p2;
+    reg [2*DIVW-1:0]    st3_p12;
+    reg [2*DIVW-1:0]    st3_pp20;
+
+    always @(*) begin
+        st3_pp02    =   q0_m2;
+        st3_p1      =   q1_m1;
+        st3_p2      =   q2_m2;
     end
 
     always @(posedge i_clk or negedge i_rstn) begin
-        if(!i_rstn)
-            res     =   {(ODW){1'b0}};
-        else
-            res     =   (s3_line2) + (s3_line3 << DIVW) + T_[6*DIVW-1:3*DIVW];
+        st3_p12     =   q1_q2_m_m1m2 - st3_p1 - st3_p2 + {st3_p2[86:0],87'b0} + T_[4*DIVW-1:3*DIVW];
+        st3_pp02    =   q2_m0 + {st3_p12[86:0],87'b0} + st3_pp02 + st3_p1 + T_[2*DIVW-1:DIVW] + s3_cc;
+    end
+    */
+    
+    /*
+    always @(*) begin
+        e           =   {cr_1,r_1[DIVW-1]};
+    end     
+    */
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn) begin
+            e       <=  2'b0;    
+            res     <=  {(4*DIVW){1'b0}};
+        end
+        else begin
+            e       <=  cr_1 + r_1[DIVW-1];
+            res     <=  s3_line0 + s3_line1 + s3_line2 + s3_line3 + s3_cc;
+        end
     end
 
-    assign  o_res   =   res;
+    //for debug
+    wire [261-1:0]      res_m;
+    wire [4*DIVW-1:0]   res_3;
+    wire [260:0]        res_4;
+    assign  res_3   =   s3_line0 + s3_line1 + s3_line2 + s3_line3;
+    assign  res_4   =   res_3[4*DIVW-1:DIVW];
+    assign  res_m   =   res[4*DIVW-1:DIVW];
+    assign  o_res   =   {res[4*DIVW-1:DIVW],e};
+
+    always @(o_res) begin
+        $fwrite(out_file3,"%x",$unsigned(o_res));
+        $fwrite(out_file3,"\n");
+    end
 
 endmodule
