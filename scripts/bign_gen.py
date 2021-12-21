@@ -59,15 +59,15 @@ def cal():
     res=MP(xxx,yyy,r,m)
 
     print('\n-------------------------------------------------------------')
-    print('X :\n',xx)
+    print('X :\n\t',xx)
     print('\n-------------------------------------------------------------')
-    print('Y :\n',yy)    
+    print('Y :\n\t',yy)    
     print('\n-------------------------------------------------------------')
-    print('Algo : xx*yy*r^(-1) mod m:\n0x{:x}'.format(res))
+    print('Algo : xx*yy*r^(-1) mod m:\n\t0x{:x}'.format(res))
     print('\n-------------------------------------------------------------')
-    print('r-m^(-1) mod r:\n0x{:x}'.format(r_m_))
+    print('r-m^(-1) mod r:\n\t0x{:x}'.format(r_m_))
     print('\n-------------------------------------------------------------')
-    print('mod_inv(r,m):\n0x{:x}'.format(mid_res))
+    print('mod_inv(r,m):\n\t0x{:x}'.format(mid_res))
 
     print(hex(int(xx,16)))
 

@@ -738,8 +738,8 @@ module mmm_nlp_256b_3way#(
     reg [4*DIVW-1:0]        s3_cc_reg1;
     reg [4*DIVW-1:0]        s3_cc_reg2;
 
-    reg [2:0]               q_0_3;
-    reg [2:0]               q_1_3;
+    reg [5:0]               q_0_3;
+    reg [5:0]               q_1_3;
     reg [2:0]               m_0_3;
     reg [2:0]               m_1_3;
     reg [6:0]               q0m1;
@@ -750,8 +750,8 @@ module mmm_nlp_256b_3way#(
     //reg [DIVW-1:0]          s3
 
     always @(*) begin
-        q_0_3       =       q0[DIVW-1:DIVW-3];
-        q_1_3       =       q1[DIVW-1:DIVW-3];
+        q_0_3       =       {3'b0,q0[DIVW-1:DIVW-3]};
+        q_1_3       =       {3'b0,q1[DIVW-1:DIVW-3]};
         m_0_3       =       m00[DIVW-1:DIVW-3];
         m_1_3       =       m01[DIVW-1:DIVW-3];
     end
