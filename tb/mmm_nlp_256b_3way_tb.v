@@ -20,8 +20,8 @@ module mmm_nlp_90b_pip_tb;
     reg     [IDW+3:0]       i_r;
     reg     [IDW-1:0]       i_mod_inv;
 
-    reg     [3*DIVW-1:0]    a;
-    reg     [3*IDW-1:0]     b;
+    reg     [IDW-1:0]       a;
+    reg     [IDW-1:0]       b;
     reg     [IDW-1:0]       m;
     reg     [IDW+3:0]       m_b;
     reg     [IDW+3:0]       r;
@@ -47,6 +47,9 @@ module mmm_nlp_90b_pip_tb;
     reg     [IDW-1:0]       sim_ret_14;
     reg     [IDW-1:0]       sim_ret_15;
     reg     [IDW-1:0]       sim_ret_16;
+
+    reg     [IDW-1:0]       sim_ret_17;
+    reg     [IDW-1:0]       sim_ret_18;
 
     wire    [ODW-1:0]       res;
 
@@ -153,6 +156,8 @@ module mmm_nlp_90b_pip_tb;
             sim_ret_14  <=  {(ODW){1'b0}};
             sim_ret_15  <=  {(ODW){1'b0}};
             sim_ret_16  <=  {(ODW){1'b0}};
+            sim_ret_17  <=  {(ODW){1'b0}};
+            sim_ret_18  <=  {(ODW){1'b0}};
             sim_ret     <=  {(ODW){1'b0}};
         end 
         else begin
@@ -172,7 +177,9 @@ module mmm_nlp_90b_pip_tb;
             sim_ret_14  <=  sim_ret_13;
             sim_ret_15  <=  sim_ret_14;
             sim_ret_16  <=  sim_ret_15;
-            sim_ret     <=  sim_ret_16;
+            sim_ret_17  <=  sim_ret_16;
+            sim_ret_18  <=  sim_ret_17;
+            sim_ret     <=  sim_ret_18;
         end
     end
     
@@ -193,7 +200,7 @@ module mmm_nlp_90b_pip_tb;
     
 
     //instance of the DUT
-    mmm_nlp_256b /*_3way*/ #(
+    mmm_nlp_256b#(
         .ODW        (ODW),
         .IDW        (IDW),
         .DIVW       (DIVW))
@@ -234,7 +241,7 @@ module mmm_nlp_90b_pip_tb;
         end
     end
 
-    wire[15:0]       sub;
+    wire[255:0]       sub;
     assign sub  =   sim_ret_16 - res;
 
     initial begin

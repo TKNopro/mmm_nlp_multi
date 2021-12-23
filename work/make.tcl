@@ -10,7 +10,8 @@
  #############################
  # source file
  #############################
-  import_files -norecurse ../src/mmm_mod_inv.v
+  import_files -norecurse ../src/addroundconstant.v
+  import_files -norecurse ../src/mmm_mod_add.v
  # import_files -norecurse ../src/mmm_nlp_90b_pip.v
  # import_files -norecurse ../src/mmm_nlp_shift_reg.v
  # import_files -norecurse ../src/mmm_r2mm.v
@@ -26,7 +27,8 @@
  #############################
  # simulation file
  #############################
- import_files -fileset sim_1 -norecurse ../tb/mmm_mod_inv_tb.v
+ import_files -fileset sim_1 -norecurse ../tb/addroundconstant_tb.v
+ #import_files -fileset sim_1 -norecurse ../tb/mmm_mod_add_tb.v
  #import_files -fileset sim_1 -norecurse ../src/mmm_nlp_shift_reg.v
 
  update_compile_order -fileset sim_1

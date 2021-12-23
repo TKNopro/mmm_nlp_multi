@@ -320,12 +320,15 @@ module mmm_nlp_256b #(
         {t5,t4,t3,t2,t1,t0} =   T;
     end
 
+    reg [3*DW-1:0]          xx;     
     always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn) begin
             {u2,u1,u0}      <=  {(3*DW){1'b0}};
+            xx              <=  {(3*DW){1'b0}};
         end
         else begin
             {u2,u1,u0}      <=  {t2,t1,t0};
+            xx              <=  {t2,t1,t0};
         end
     end
 
@@ -393,7 +396,7 @@ module mmm_nlp_256b #(
     reg [DW-1:0]            q1;
     reg [DW-1:0]            q2;
 
-    reg [3*DW-1:0]          Q;
+    reg [IDW+2:0]           Q;
     /*
     always @(*) begin
         {mb2,mb1,mb0}       =   {{(3*MW-3*DW){1'b0}},MB2_reg,MB1_reg,MB0_reg};
@@ -517,7 +520,7 @@ module mmm_nlp_256b #(
 
 
     always @(*) begin
-        q2      =   Q[3*DW-1:2*DW];//{{(3*DW-IDW-3){1'b0}},Q[IDW+2:2*DW]};
+        q2      =   {{(3*DW-IDW-3){1'b0}},Q[IDW+2:2*DW]};//{{(3*DW-IDW-3){1'b0}},Q[IDW+2:2*DW]};
         q1      =   Q[2*DW-1:DW];//Q[2*DW-1:DW];
         q0      =   Q[DW-1:0];//Q[DW-1:0];
     end
@@ -705,7 +708,7 @@ module mmm_nlp_256b #(
         end
     end
 
-    reg [2:0]       cr_1;
+    reg [1:0]       cr_1;
     reg [DW-1:0]    r_1;
     reg [DW-1:0]    R_1;
     reg [1:0]       ee;
@@ -748,9 +751,36 @@ module mmm_nlp_256b #(
             r   <=  {(4*DW){1'b0}};
         end
         else begin
-            r   <=  (r_line1_reg + r_line2_reg + r_line3_reg + r_line4_reg + r_cc[DW-1:0]) << 2;
+            r   <=  (r_line1_reg + r_line2_reg + r_line3_reg + r_line4_reg + r_cc) << 2;
         end
     end
 
     assign  o_res = r[4*DW-1:DW];
+    
+    reg     [ODW-1:0]   res_pre;
+    reg     [ODW-1:0]   res;
+    reg     [1:0]       cr_;
+    reg     [DW-1:0]    r_;
+
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn)
+            {cr_,r_}    <=  {(DW+2){1'b0}};
+        else
+            {cr_,r_}    <=  {cr_1,r_1};
+    end
+
+    always @(*) begin
+        if(r_1[DW-1])
+            res_pre     =       r[4*DW-1:DW] + 1'b1;
+        else
+            res_pre     =       r[4*DW-1:DW];
+    end
+
+    always @(posedge i_clk or negedge i_rstn) begin
+        if(!i_rstn)
+            res     <=  {(ODW){1'b0}};
+        else
+            res     <=  res_pre;
+    end
+    //assign  o_res = res;
 endmodule
